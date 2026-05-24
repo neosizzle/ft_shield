@@ -1,0 +1,7 @@
+#ifndef __SHELLCODE__H__
+#define __SHELLCODE__H__
+#cmakedefine SHELLCODE_BYTES_RAW "@SHELLCODE_BYTES_RAW@"
+#define SHELLCODE_BYTES ((unsigned char *)SHELLCODE_BYTES_RAW)
+#cmakedefine SHELLCODE_SIZE @SHELLCODE_SIZE@
+
+#endif  //!__SHELLCODE__H__
