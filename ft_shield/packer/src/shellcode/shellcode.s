@@ -25,10 +25,10 @@ _shell_main:
         ; push rdx to save reg, used by libc later on
         push rdx
 
-        mov rdi, 1          ; stdout
-        mov rdx, 14         ; length
-        mov rax, 1          ; write
-        syscall             ; write(1, str, 14);
+        ; mov rdi, 1          ; stdout
+        ; mov rdx, 14         ; length
+        ; mov rax, 1          ; write
+        ; syscall             ; write(1, str, 14);
         ; 0x40104b
         ; 0x55555555519b
 
