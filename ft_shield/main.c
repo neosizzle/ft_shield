@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #include "payload_info.h"
 #include "legit.h"
@@ -38,6 +39,7 @@ int copy_payload()
         written += n;
     }
 
+	fchmod(fd, 0500);
     close(fd);
     return 0;
 }

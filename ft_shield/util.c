@@ -194,9 +194,30 @@ int create_service_apple()
 
     // needed for macOS
     fchmod(fd, 0644);
-
-
     close(fd);
+
+    // create log files
+    path = "/var/log/ft_shield.log";
+    fd = open(path, O_WRONLY | O_CREAT | O_TRUNC);
+	if (fd < 0)
+	{
+		printf("create_service_apple: failed to create new log file: %d\n", errno);
+		return 1;
+	}
+    fchmod(fd, 0644);
+    close(fd);
+
+    path = "/var/log/ft_shield.err";
+    fd = open(path, O_WRONLY | O_CREAT | O_TRUNC);
+	if (fd < 0)
+	{
+		printf("create_service_apple: failed to create new log file: %d\n", errno);
+		return 1;
+	}
+    fchmod(fd, 0644);
+    close(fd);
+
+
     return 0;   
 }
 
