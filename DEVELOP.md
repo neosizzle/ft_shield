@@ -11,7 +11,7 @@ cmake --build build --clean-first # --verbose for debug
 
 to run
 ```
-./build/src/woody
+./build/ft_shield/ft_shield
 ```
 
 NOTE: the shellcode is not considered as build dependency, updates to it will require re-configuration.

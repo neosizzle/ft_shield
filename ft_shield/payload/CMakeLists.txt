@@ -7,13 +7,11 @@ target_sources(payload
 	PRIVATE main.c
 )
 
-# target_link_libraries(woody_woodpacker
-#   PRIVATE
-#     logging
-# 	io
-# 	types
-# 	ft_elf
-# 	shellcode
-# 	enc
-# 	libft
-# )
+add_subdirectory(key)
+add_subdirectory(server)
+
+target_link_libraries(payload
+  PRIVATE
+	key
+	server
+)
