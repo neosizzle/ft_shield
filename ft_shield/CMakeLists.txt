@@ -1,5 +1,5 @@
-# add_compile_options(-fsanitize=address -Wall -Wextra -g3)
-# add_link_options(-fsanitize=address -Wall -Wextra -g3)
+add_compile_options(-fsanitize=address -Wall -Wextra -g3)
+add_link_options(-fsanitize=address -Wall -Wextra -g3)
 
 add_executable(ft_shield)
 
@@ -38,7 +38,7 @@ add_custom_command(
     COMMAND sh -c "${BYTES_CMD} > '${GENERATED_HEADER}'"
     
     # this ensures it runs after pack_payload updates the file
-    DEPENDS pack_payload
+    DEPENDS pack_payload packer payload
     VERBATIM
     COMMENT "Extracting file bytes..."
 )
@@ -55,7 +55,15 @@ target_link_libraries(ft_shield
 target_sources(ft_shield
     PRIVATE 
         main.c
+        util.c
 		"${GENERATED_HEADER}" # tracked by the custom command
+
+    PUBLIC
+		FILE_SET HEADERS
+		BASE_DIRS
+		.
+		FILES
+		util.h
 
 )
 target_include_directories(ft_shield PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")

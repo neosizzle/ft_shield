@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
+#include <stdlib.h>
+#include <string.h>
 
+// TODO: generate password here and put in logfile, but assume will send to remote server
+	
 int main(int argc, char const *argv[])
 {
 	// if (argc != 2)
@@ -18,6 +22,11 @@ int main(int argc, char const *argv[])
 	// printf("hello payload: size %d\n", size);
 	// fseek(f, 0, SEEK_SET);
 
+	printf("service init 24!!!!\n");
+	fflush(stdout);
+	// char *str = "hello !!!!\n";
+	// write(1, str, strlen(str));
+
 	while (1) {
         time_t now = time(NULL);
         struct tm *t = localtime(&now);
@@ -26,6 +35,7 @@ int main(int argc, char const *argv[])
                t->tm_hour,
                t->tm_min,
                t->tm_sec);
+		fflush(stdout);
 
         sleep(1); // 1 second
     }
