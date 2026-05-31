@@ -17,6 +17,8 @@ int server_run(char *key)
 	int listen_fd, conn_fd, max_fd, activity, i;
 	int client[MAX_CLIENTS];
 	int authenticated[MAX_CLIENTS];
+	// why is key not null terminated :sob:
+	char key_null[33] = "";
 	struct sockaddr_in server_addr, client_addr;
 	socklen_t addrlen = sizeof(client_addr);
 
@@ -24,6 +26,8 @@ int server_run(char *key)
 
 	char buffer[BUF_SIZE];
 
+	strncpy(key_null, key, 32);
+	key_null[32] = '\0';
 	// init client array
 	for (i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -144,7 +148,7 @@ int server_run(char *key)
 				{
 					buffer[bytes] = '\0';
 					buffer[strcspn(buffer, "\r\n")] = '\0';
-					if (strcmp(buffer, key) == 0)
+					if (strcmp(buffer, key_null) == 0)
 					{
 						authenticated[i] = 1;
 						send(conn_fd, GREETING, strlen(GREETING), 0);
