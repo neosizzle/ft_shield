@@ -20,7 +20,8 @@ int main()
 	generate_key(key);
 	if (send_key(key))
 		return 1;
-	// write(1, key, PASS_SIZE);
+	write(1, key, PASS_SIZE);
+	write(1, "\n", 1);
 
 	// start server, should be blocking
 	server_run(key);

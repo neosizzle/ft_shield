@@ -179,6 +179,17 @@ int server_run(char *key)
 					buffer[bytes] = '\0';
 					printf("recv: %s\n", buffer);
 
+					// quick exit handling without passing too much state to handler
+					if (!strcmp(buffer, "exit\n"))
+					{
+						close(conn_fd);
+						client[client_iter]        = 0;
+						authenticated[client_iter] = 0;
+						client_threads[client_iter] = 0;
+						continue;
+					}
+
+
 					command_worder_data_t command_data;
 					
 					command_data.input = strdup(buffer);
