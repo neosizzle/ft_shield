@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/select.h>
+#include <pthread.h>
 
 #include "server.h"
 #include "commands.h"
@@ -14,25 +15,27 @@
 
 int server_run(char *key)
 {
-	int listen_fd, conn_fd, max_fd, activity, i;
+	int listen_fd, conn_fd, max_fd, activity, client_iter;
+
 	int client[MAX_CLIENTS];
 	int authenticated[MAX_CLIENTS];
-	// why is key not null terminated :sob:
-	char key_null[33] = "";
+	pthread_t client_threads[MAX_CLIENTS];
+	command_worder_data_t client_thread_inputs[MAX_CLIENTS];
+
+
 	struct sockaddr_in server_addr, client_addr;
 	socklen_t addrlen = sizeof(client_addr);
-
 	fd_set readfds, writefds;
 
 	char buffer[BUF_SIZE];
 
-	strncpy(key_null, key, 32);
-	key_null[32] = '\0';
 	// init client array
-	for (i = 0; i < MAX_CLIENTS; i++)
+	for (client_iter = 0; client_iter < MAX_CLIENTS; client_iter++)
 	{
-		client[i] = 0;
-		authenticated[i] = 0;
+		client[client_iter] = 0;
+		authenticated[client_iter] = 0;
+		client_threads[client_iter] = 0;
+
 	}
 
 	// create socket
@@ -74,9 +77,9 @@ int server_run(char *key)
 		max_fd = listen_fd;
 
 		// add clients
-		for (i = 0; i < MAX_CLIENTS; i++)
+		for (client_iter = 0; client_iter < MAX_CLIENTS; client_iter++)
 		{
-			conn_fd = client[i];
+			conn_fd = client[client_iter];
 
 			if (conn_fd > 0)
 			{
@@ -111,16 +114,14 @@ int server_run(char *key)
 
 			printf("New connection: fd=%d\n", conn_fd);
 
-			// TODO: auth handshake
-
 			// add to client list
-			for (i = 0; i < MAX_CLIENTS; i++)
+			for (client_iter = 0; client_iter < MAX_CLIENTS; client_iter++)
 			{
-				if (client[i] == 0)
+				if (client[client_iter] == 0)
 				{
-					client[i] = conn_fd;
-					authenticated[i] = 0;
-					// send greeting immediately
+					client[client_iter] = conn_fd;
+					authenticated[client_iter] = 0;
+					client_threads[client_iter] = 0;
 					send(conn_fd, "Password: ", strlen("Password: "), 0);
 					break;
 				}
@@ -128,9 +129,14 @@ int server_run(char *key)
 		}
 
 		// handle client IO
-		for (i = 0; i < MAX_CLIENTS; i++)
+		for (client_iter = 0; client_iter < MAX_CLIENTS; client_iter++)
 		{
-			conn_fd = client[i];
+			conn_fd = client[client_iter];
+			pthread_t curr_thread = client_threads[client_iter];
+
+			// if client_iter is running job, do not handle io
+			if (curr_thread != 0)
+				continue;
 
 			if (conn_fd > 0 && FD_ISSET(conn_fd, &readfds))
 			{
@@ -140,17 +146,18 @@ int server_run(char *key)
 				{
 					printf("Client disconnected fd=%d\n", conn_fd);
 					close(conn_fd);
-					client[i] = 0;
-					authenticated[i] = 0;
+					client[client_iter] = 0;
+					authenticated[client_iter] = 0;
+					client_threads[client_iter] = 0;
 					continue ;
 				}
-				if (!authenticated[i])
+				if (!authenticated[client_iter])
 				{
 					buffer[bytes] = '\0';
 					buffer[strcspn(buffer, "\r\n")] = '\0';
-					if (strcmp(buffer, key_null) == 0)
+					if (strcmp(buffer, key) == 0)
 					{
-						authenticated[i] = 1;
+						authenticated[client_iter] = 1;
 						send(conn_fd, GREETING, strlen(GREETING), 0);
 						printf("Client fd=%d authenticated\n", conn_fd);
 					}
@@ -159,18 +166,38 @@ int server_run(char *key)
 						send(conn_fd, "Access denied: Wrong password\n", 28, 0);
 						printf("Client fd=%d wrong password, disconnecting\n", conn_fd);
 						close(conn_fd);
-						client[i]        = 0;
-						authenticated[i] = 0;
+						client[client_iter]        = 0;
+						authenticated[client_iter] = 0;
+						client_threads[client_iter] = 0;
 					}
 				}
 				else
 				{
 					// TODO: make dynamic here
-					// TODO: make this use pthread
+					// TODO: handle exit state changes
+
 					buffer[bytes] = '\0';
-					if(handle_command(buffer, conn_fd, &writefds))
-						return 1;
 					printf("recv: %s\n", buffer);
+
+					command_worder_data_t command_data;
+					
+					command_data.input = strdup(buffer);
+					command_data.conn_fd = conn_fd;
+					command_data.write_fds = &writefds;
+					command_data.client_threads = client_threads; // NOTE: sus of race condition at pthread_create
+					command_data.client_iter = client_iter;
+
+					client_thread_inputs[client_iter] = command_data;
+
+					// yes, might be sus because no mutex for client_threads here
+					// but this is thread creation code, the job will only run after tid is created at uniqie position, no data race.
+					pthread_create(
+						&client_threads[client_iter],
+						NULL,
+						(void * (*)(void *))handle_command,
+						&client_thread_inputs[client_iter]
+					);
+
 
 				}
 			}
@@ -178,5 +205,6 @@ int server_run(char *key)
 	}
 
 	close(listen_fd);
+
 	return 0;
 }

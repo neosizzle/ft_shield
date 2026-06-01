@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <pty.h>
+#include <stdio.h>
 
 #include "commands.h"
 
@@ -14,10 +15,11 @@ int retry_send(char *buf, int conn_fd, int size, fd_set* write_fds)
 	while (!FD_ISSET(conn_fd, write_fds))
 		sleep(1);
 	send(conn_fd, buf, size, 0);
+
 	return 0;
 }
 
-int start_shell(int conn_fd)
+int start_shell_session(int conn_fd)
 {
 	int master_fd;
 	// TODO: research this. If i just use fork(), sh will complain
@@ -42,21 +44,30 @@ int start_shell(int conn_fd)
 	return 0;
 }
 
-int handle_command(char *input, int conn_fd, fd_set* write_fds)
+void *handle_command(command_worder_data_t* data)
 {
+	char *input = data->input;
+	int conn_fd = data->conn_fd;
+	int client_iter = data->client_iter;
+	pthread_t *client_threads = data->client_threads;
+	fd_set *write_fds = data->write_fds;
 	
+	// NOTE: mutex for client_threads not needed as write position is unique 
+	// for all threads, and there are no reading done
 	if (!strcmp(input, "help\n"))
 	{
 		if (retry_send(HELP_MENU, conn_fd, strlen(HELP_MENU), write_fds))
-			return 1;
-		return retry_send(": ", conn_fd, 2, write_fds);
-
+			exit(1);
+		retry_send(": ", conn_fd, 2, write_fds);
+		
 	}
 	if (!strcmp(input, "shell\n"))
 	{
-		if (start_shell(conn_fd))
-			return 1;
+		if (start_shell_session(conn_fd))
+			exit(1);
+		retry_send(": ", conn_fd, 2, write_fds); // NOTE: this will break server if using client nc + ctrl+c
 	}
-	
-	return retry_send(": ", conn_fd, 2, write_fds);
+	client_threads[client_iter] = 0;
+	free(input);
+	return NULL;
 }

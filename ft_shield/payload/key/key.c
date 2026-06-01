@@ -20,7 +20,7 @@ int generate_key(char *in)
 
     int total_read = 0;
 
-    while (total_read < PASS_SIZE) {
+    while (total_read < PASS_SIZE - 2) {
 		unsigned char byte;
         ssize_t bytes_read = read(fd, &byte, 1);
         if (bytes_read < 0) {
@@ -31,8 +31,8 @@ int generate_key(char *in)
 
 		in[total_read] = char_list[byte % strlen(char_list)];
         total_read += 1;
-
     }
+	in[PASS_SIZE - 1] = 0;
 
     close(fd);
 	return 0;

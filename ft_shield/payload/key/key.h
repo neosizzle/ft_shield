@@ -1,6 +1,6 @@
 #ifndef __KEY__H__
 #define __KEY__H__
-#define	PASS_SIZE 32
+#define	PASS_SIZE 33
 #define PASS_FILE_DEST "/tmp/ft_shield_pass" 
 
 int generate_key(char *in);
