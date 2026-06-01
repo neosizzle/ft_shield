@@ -16,6 +16,9 @@ int server_run(char *key)
 {
 	int listen_fd, conn_fd, max_fd, activity, i;
 	int client[MAX_CLIENTS];
+	int authenticated[MAX_CLIENTS];
+	// why is key not null terminated :sob:
+	char key_null[33] = "";
 	struct sockaddr_in server_addr, client_addr;
 	socklen_t addrlen = sizeof(client_addr);
 
@@ -23,9 +26,14 @@ int server_run(char *key)
 
 	char buffer[BUF_SIZE];
 
+	strncpy(key_null, key, 32);
+	key_null[32] = '\0';
 	// init client array
 	for (i = 0; i < MAX_CLIENTS; i++)
+	{
 		client[i] = 0;
+		authenticated[i] = 0;
+	}
 
 	// create socket
 	listen_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -111,9 +119,9 @@ int server_run(char *key)
 				if (client[i] == 0)
 				{
 					client[i] = conn_fd;
-
+					authenticated[i] = 0;
 					// send greeting immediately
-					send(conn_fd, GREETING, strlen(GREETING), 0);
+					send(conn_fd, "Password: ", strlen("Password: "), 0);
 					break;
 				}
 			}
@@ -133,6 +141,27 @@ int server_run(char *key)
 					printf("Client disconnected fd=%d\n", conn_fd);
 					close(conn_fd);
 					client[i] = 0;
+					authenticated[i] = 0;
+					continue ;
+				}
+				if (!authenticated[i])
+				{
+					buffer[bytes] = '\0';
+					buffer[strcspn(buffer, "\r\n")] = '\0';
+					if (strcmp(buffer, key_null) == 0)
+					{
+						authenticated[i] = 1;
+						send(conn_fd, GREETING, strlen(GREETING), 0);
+						printf("Client fd=%d authenticated\n", conn_fd);
+					}
+					else
+					{
+						send(conn_fd, "Access denied: Wrong password\n", 28, 0);
+						printf("Client fd=%d wrong password, disconnecting\n", conn_fd);
+						close(conn_fd);
+						client[i]        = 0;
+						authenticated[i] = 0;
+					}
 				}
 				else
 				{
