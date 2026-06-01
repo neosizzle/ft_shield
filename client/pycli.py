@@ -4,6 +4,7 @@ Requires: pip install textual rich
 
 from __future__ import annotations
 
+import select
 import socket
 import sys
 import json
@@ -406,11 +407,24 @@ def render_once(data: dict) -> None:
 
 def stream_response(sock: socket.socket, buffer_size: int = 4096) -> None:
     while True:
-        chunk = sock.recv(buffer_size)
-        if not chunk:
-            break
-        sys.stdout.buffer.write(chunk)
-        sys.stdout.buffer.flush()
+        try:
+            readable, _, _ = select.select([sock, sys.stdin], [], [])
+        except KeyboardInterrupt:
+            return
+
+        for src in readable:
+            if src is sock:
+                chunk = sock.recv(buffer_size)
+                if not chunk:
+                    return
+                sys.stdout.buffer.write(chunk)
+                sys.stdout.buffer.flush()
+
+            elif src is sys.stdin:
+                line = sys.stdin.readline()
+                if not line:
+                    return
+                sock.sendall(line.encode("utf-8"))
 
 
 def main():
@@ -427,6 +441,7 @@ def main():
         "Enter a command:\n"
         "    d - Display I/O metrics\n"
         "    o - Display snapshot of I/O metrics\n"
+        "    s - Stream server session\n"
         "    q - Quit\n"
     )
 
@@ -457,6 +472,10 @@ def main():
                     redraw_prompt()
                 elif inp == 'o':
                     render_once(fetch(client))
+                    show_menu()
+                elif inp == 's':
+                    print("Streaming server session (Ctrl+C to stop)...")
+                    stream_response(client)
                     show_menu()
                 elif inp == 'q':
                     print("Disconnecting")
