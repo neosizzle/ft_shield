@@ -35,7 +35,7 @@ int extract_key(char *key)
 	while (1)
 	{
 		connect(sock, (struct sockaddr*)&server, sizeof(server));
-		if (recv(sock, &acknowledgement, 1, 0) < 0)
+		if (recv(sock, &acknowledgement, 1, 0) <= 0)
 		{
 			printf("extract_key: failed to receive acknowledgement\n");
 			close(sock);
@@ -46,6 +46,8 @@ int extract_key(char *key)
 				return -1;
 			}
 		}
+		else
+			break ;
 	}
     if (send(sock, key, PASS_SIZE, 0) < 0)
     {
