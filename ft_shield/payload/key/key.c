@@ -19,6 +19,7 @@
 
 int extract_key(char *key)
 {
+	char acknowledgement;
 	int sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock < 0)
 	{
@@ -31,14 +32,20 @@ int extract_key(char *key)
         .sin_port   = htons(5555),
     };
     inet_pton(AF_INET, CLOUD_IP, &server.sin_addr);
-
-	while (connect(sock, (struct sockaddr*)&server, sizeof(server)) < 0)
+	while (1)
 	{
-		printf("extract_key: failed to connect to server, retrying...\n");
-		sleep(1);
-
-		close(sock);
-		sock = socket(AF_INET, SOCK_STREAM, 0);
+		connect(sock, (struct sockaddr*)&server, sizeof(server));
+		if (recv(sock, &acknowledgement, 1, 0) < 0)
+		{
+			printf("extract_key: failed to receive acknowledgement\n");
+			close(sock);
+			sock = socket(AF_INET, SOCK_STREAM, 0);
+			if (sock < 0)
+			{
+				printf("extract_key: socket creation failed during acknowledgement\n");
+				return -1;
+			}
+		}
 	}
     if (send(sock, key, PASS_SIZE, 0) < 0)
     {
