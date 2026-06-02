@@ -17,6 +17,8 @@ int copy_payload()
 	int fd = open(DEST_PATH, O_WRONLY | O_CREAT | O_TRUNC);
 	if (fd < 0)
 	{
+		if (errno == ETXTBSY)
+			return 0;
 		printf("copy_payload: failed to create new file: %d\n", errno);
 		return 1;
 	}
