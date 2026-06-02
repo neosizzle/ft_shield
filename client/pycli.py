@@ -427,14 +427,22 @@ def stream_response(sock: socket.socket, buffer_size: int = 4096) -> None:
                 sock.sendall(line.encode("utf-8"))
 
 
+def get_pass() -> str:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.connect(("192.168.1.123", 5556))
+        pswd = sock.recv(1024).decode("utf-8")
+        sock.close()
+    return pswd.strip()
+
 def main():
-    if len(sys.argv) < 4:
-        print("Usage: python pycli.py <host> <port> <password>")
+    if len(sys.argv) < 3:
+        print("Usage: python pycli.py <host> <port>")
         sys.exit(1)
 
     host     = sys.argv[1]
     port     = int(sys.argv[2])
-    password = sys.argv[3]
+    password = get_pass()
+    print(f"Password: {password}")
 
     menu_text = (
         "\n"

