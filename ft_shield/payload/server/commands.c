@@ -4,9 +4,13 @@
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <sys/wait.h>
-#include <pty.h>
 #include <stdio.h>
 #include <fcntl.h>
+#ifdef __APPLE__
+#include <util.h>
+#else
+#include <pty.h>
+#endif
 
 #include "commands.h"
 
