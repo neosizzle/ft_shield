@@ -97,7 +97,7 @@ def accept_loop(host: str, port: int, handler: callable, label: str) -> None:
 		while not stop_event.is_set():
 			try:
 				conn, addr = server.accept()
-			except TimeoutError:
+			except socket.timeout:
 				continue
 			except OSError:
 				if stop_event.is_set():
