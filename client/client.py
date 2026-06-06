@@ -4,6 +4,14 @@ import os
 import select
 import time
 
+def get_pass() -> str:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        # sock.connect(("192.168.1.123", 5556))
+        sock.connect(("127.0.0.1", 5556)) # junhan mac attacker
+        pswd = sock.recv(1024).decode("utf-8")
+        sock.close()
+    return pswd.strip()
+
 
 HOST = "127.0.0.1"
 PORT = 4242
@@ -16,6 +24,8 @@ sock.connect((HOST, PORT))
 sock.setblocking(False)
 
 buffer = ""
+
+print(f"Password from remote: {get_pass()}")
 
 while True:
     # watch both socket + stdin
