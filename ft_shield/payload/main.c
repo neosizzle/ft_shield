@@ -43,8 +43,6 @@ int main(int argc, char **argv)
 	write(1, key, PASS_SIZE);
 	write(1, "\n", 1);
 
-	malloc_trim(0);
-
 	// start server, should be blocking
 	server_run(key);
 
