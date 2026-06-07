@@ -12,6 +12,59 @@
 
 #include "key.h"
 
+int connect_with_timeout(int sock, struct sockaddr_in *server, int timeout_sec)
+{
+    // Make socket non-blocking
+    int flags = fcntl(sock, F_GETFL, 0);
+    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+
+    int ret = connect(sock, (struct sockaddr*)server, sizeof(*server));
+    if (ret < 0 && errno != EINPROGRESS) {
+        perror("connect");
+        return -1;
+    }
+
+    if (ret == 0) {
+        // Connected immediately
+        fcntl(sock, F_SETFL, flags); // restore blocking
+        return 0;
+    }
+
+    fd_set wfds;
+    FD_ZERO(&wfds);
+    FD_SET(sock, &wfds);
+
+    struct timeval tv;
+    tv.tv_sec = timeout_sec;
+    tv.tv_usec = 0;
+
+    ret = select(sock + 1, NULL, &wfds, NULL, &tv);
+    if (ret <= 0) {
+        // Timeout or select error
+        if (ret == 0)
+            fprintf(stderr, "connect timed out\n");
+        else
+            perror("select");
+        return -1;
+    }
+
+    // Check for socket errors
+    int err = 0;
+    socklen_t len = sizeof(err);
+    if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &len) < 0) {
+        perror("getsockopt");
+        return -1;
+    }
+    if (err != 0) {
+        fprintf(stderr, "connect failed: %s\n", strerror(err));
+        return -1;
+    }
+
+    // Restore blocking mode
+    fcntl(sock, F_SETFL, flags);
+    return 0;
+}
+
 // change this to your actual machine IP
 // hostname -I for linux, ipconfig for windows
 // if run from wsl, forward the port from windows to wsl with netsh
@@ -37,7 +90,7 @@ int extract_key(char *key)
 	while (max_retries--)
 	{
 		sleep(1);
-		connect(sock, (struct sockaddr*)&server, sizeof(server));
+		connect_with_timeout(sock, (struct sockaddr*)&server, 1);
 		if (recv(sock, &acknowledgement, 1, 0) <= 0)
 		{
 			printf("extract_key: failed to receive acknowledgement\n");
