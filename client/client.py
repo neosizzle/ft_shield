@@ -13,7 +13,8 @@ def get_pass() -> str:
     return pswd.strip()
 
 
-HOST = "127.0.0.1"
+HOST = "127.0.0.1" # junhan linux
+# HOST = "192.168.64.6" # junhan mac
 PORT = 4242
 
 upload_state = 0
@@ -25,7 +26,10 @@ sock.setblocking(False)
 
 buffer = ""
 
-print(f"Password from remote: {get_pass()}")
+try:
+    print(f"Password from remote: {get_pass()}")
+except:
+    print("Remote password retreival failed")
 
 while True:
     # watch both socket + stdin
