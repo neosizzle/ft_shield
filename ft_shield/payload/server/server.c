@@ -13,6 +13,7 @@
 
 #define GREETING "ft_shield terminal\n: "
 
+// TODO: check if max_clients overflow
 int server_run(char *key)
 {
 	int listen_fd, conn_fd, max_fd, activity, client_iter;
