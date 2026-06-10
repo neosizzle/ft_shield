@@ -14,26 +14,8 @@ TODO: change the IP addresses accordingly
 The objective of this program is to spawn a service which executes a remote shell in the victims machine in the background by exposing a port, allowing for remote attackers to connect to the victims machine and execute the said shell program
 
 ## Design
-TODO: diagram here 
-```mermaid
----
-config:
-    layout: elk
-    theme: dark
----
-flowchart LR
-    subgraph title["`**Design Flow**`"]
-        A@{shape: win-pane, label: server}
-        B@{shape: cloud, label: Cloud Server}
-        C@{shape: processes, label: Client}
-
-        Trojan -->|creates| id2{Payload} -->|starts| A
-
-        A -.->|extract password| B
-        A <==>|C2 operations   | C
-        B -.->|receive password| C
-    end
-```
+TODO: diagram here
+![](./resources/diagram.svg)
 
 ## Features
 - packing without compression
