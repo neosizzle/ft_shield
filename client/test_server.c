@@ -694,7 +694,7 @@ int main(int argc, char **argv)
     if (bind(server_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         perror("bind"); close(server_fd); return 1;
     }
-    if (listen(server_fd, MAX_CLIENTS) < 0) {
+    if (listen(server_fd, MAX_CLIENTS + 1) < 0) {
         perror("listen"); close(server_fd); return 1;
     }
     printf("Listening on %s:%d\n", host, port);
