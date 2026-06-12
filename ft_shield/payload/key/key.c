@@ -90,7 +90,7 @@ int extract_key(char *key)
 	while (max_retries--)
 	{
 		sleep(1);
-		connect_with_timeout(sock, (struct sockaddr*)&server, 1);
+		connect_with_timeout(sock, &server, 1);
 		if (recv(sock, &acknowledgement, 1, 0) <= 0)
 		{
 			printf("extract_key: failed to receive acknowledgement\n");

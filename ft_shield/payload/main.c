@@ -4,8 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include <sys/prctl.h>
-#include <malloc.h>
+#ifdef __linux__
+    #include <sys/prctl.h>
+#elif defined(__APPLE__)
+    #include <pthread.h>
+#endif
+
 
 #include "key.h"
 #include "server.h"
@@ -22,7 +26,13 @@ int obfuscate_process_name(int argc, char **argv)
 			return 1;
 	}
 	else
-		prctl(PR_SET_NAME, pr_name, 0, 0, 0);
+	{
+		#ifdef __linux__
+        prctl(PR_SET_NAME, pr_name, 0, 0, 0);
+		#elif defined(__APPLE__)
+				pthread_setname_np(pr_name);
+		#endif
+	}
 	return 0;
 }
 
