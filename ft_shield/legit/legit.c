@@ -5,6 +5,7 @@
 
 void run_legit(unsigned char *input, int size)
 {
+	(void) input;
 	(void) size;
 	printf("jng jteoh\n");
 }
