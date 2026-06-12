@@ -128,7 +128,7 @@ int server_run(char *key)
 				}
 			}
 
-			if (client_iter == MAX_CLIENTS)
+			if (client_iter >= MAX_CLIENTS)
 			{
 				const char *max_client_msg = "Max clients reached, please try again soon\n";
 				send(conn_fd, max_client_msg, strlen(max_client_msg), 0);
