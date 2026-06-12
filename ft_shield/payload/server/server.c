@@ -61,7 +61,7 @@ int server_run(char *key)
 		return 1;
 	}
 
-	if (listen(listen_fd, MAX_CLIENTS) < 0)
+	if (listen(listen_fd, MAX_CLIENTS + 1) < 0)
 	{
 		printf("server_run: socket listen error %d", errno);
 		return 1;
