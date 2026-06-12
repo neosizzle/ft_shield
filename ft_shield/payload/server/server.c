@@ -127,6 +127,13 @@ int server_run(char *key)
 					break;
 				}
 			}
+
+			if (client_iter == MAX_CLIENTS)
+			{
+				const char *max_client_msg = "Max clients reached, please try again soon\n";
+				send(conn_fd, max_client_msg, strlen(max_client_msg), 0);
+				close(conn_fd);	
+			}
 		}
 
 		// handle client IO
@@ -175,8 +182,6 @@ int server_run(char *key)
 				else
 				{
 					// TODO: make dynamic here
-					// TODO: handle exit state changes
-
 					buffer[bytes] = '\0';
 					printf("recv: %s\n", buffer);
 
